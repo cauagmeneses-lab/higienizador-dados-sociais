@@ -30,4 +30,7 @@ jobs:
 
     - name: Rodar Testes (pytest)
       run: |
-        pytest
+        - name: Rodar Testes (pytest)
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        python -m pytest tests/
