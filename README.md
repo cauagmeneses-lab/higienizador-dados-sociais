@@ -1,7 +1,18 @@
 #  Higienizador de Dados Sociais
 
 **Versão Atual:** 1.0.0
+## 🚀 Deploy e Execução (Como Usar)
 
+Por ser uma aplicação de Interface de Linha de Comando (CLI), o deploy e a execução são feitos diretamente via terminal. Siga os passos:
+
+1. **Clone o repositório:**
+   `git clone https://github.com/cauagmeneses-lab/higienizador-dados-sociais.git`
+2. **Instale as dependências:**
+   `pip install -r requirements.txt`
+3. **Execute o programa passando o seu arquivo sujo:**
+   `python src/cli.py sujo.csv`
+
+*(Nota: A aplicação já está integrada à API pública do ViaCEP. Caso o seu arquivo possua uma coluna chamada `CEP`, o programa buscará os dados de endereço automaticamente na internet e adicionará as colunas de Logradouro, Bairro e UF no arquivo limpo).*
 ##  O Problema
 Muitas ONGs, projetos comunitários e pesquisadores independentes lidam diariamente com listas de dados abertos (doadores, beneficiários, postos de saúde). Frequentemente, essas planilhas CSV vêm completamente despadronizadas, com linhas em branco, nomes em formatos variados e documentos/telefones contendo letras e símbolos misturados. O trabalho manual de higienizar isso consome um tempo precioso que deveria ser focado na causa social.
 
