@@ -31,12 +31,11 @@ def buscar_cep(cep: str) -> dict:
     cep_limpo = limpar_documento(cep)
     if len(cep_limpo) != 8:
         return {}
-    
+
     try:
-        # Faz a requisição HTTP GET para a API
         url = f"https://viacep.com.br/ws/{cep_limpo}/json/"
         resposta = requests.get(url, timeout=5)
-        
+
         if resposta.status_code == 200:
             dados = resposta.json()
             if "erro" not in dados:
@@ -47,8 +46,8 @@ def buscar_cep(cep: str) -> dict:
                     "UF": dados.get("uf", "")
                 }
     except requests.RequestException:
-        pass  # Se a internet cair ou a API falhar, apenas ignora e não quebra o app
-        
+        pass
+
     return {}
 
 
@@ -58,15 +57,13 @@ def processar_csv(caminho_entrada: str, caminho_saida: str) -> dict:
     linhas_rem = 0
 
     with open(caminho_entrada, 'r', encoding='latin-1') as arq_in:
-        # Lemos tudo para a memória para podermos adicionar colunas novas no cabeçalho
         leitor = list(csv.DictReader(arq_in))
-        
+
         if not leitor:
             return {"processadas": 0, "removidas": 0}
 
         campos = list(leitor[0].keys())
-        
-        # Se tiver CEP na planilha suja, preparamos as colunas novas para a limpa
+
         if "CEP" in campos:
             colunas_extras = ["Logradouro", "Bairro", "Localidade", "UF"]
             for col in colunas_extras:
@@ -88,12 +85,11 @@ def processar_csv(caminho_entrada: str, caminho_saida: str) -> dict:
                     linha["CPF"] = limpar_documento(linha["CPF"])
                 if "Telefone" in linha:
                     linha["Telefone"] = limpar_documento(linha["Telefone"])
-                
-                
+
                 if "CEP" in linha:
                     linha["CEP"] = limpar_documento(linha["CEP"])
                     dados_end = buscar_cep(linha["CEP"])
-                    
+
                     linha["Logradouro"] = dados_end.get("Logradouro", "")
                     linha["Bairro"] = dados_end.get("Bairro", "")
                     linha["Localidade"] = dados_end.get("Localidade", "")
