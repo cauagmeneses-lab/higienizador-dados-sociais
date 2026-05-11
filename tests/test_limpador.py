@@ -1,4 +1,5 @@
-from src.limpador import padronizar_nome, limpar_documento, linha_eh_valida, buscar_cep
+from src.limpador import padronizar_nome, limpar_documento
+from src.limpador import linha_eh_valida, buscar_cep
 
 
 def test_padronizar_nome():
