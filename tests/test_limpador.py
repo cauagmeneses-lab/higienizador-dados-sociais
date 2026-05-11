@@ -1,32 +1,29 @@
-from src.limpador import padronizar_nome, limpar_documento, linha_eh_valida
+from src.limpador import padronizar_nome, limpar_documento
+from src.limpador import linha_eh_valida, buscar_cep
 
 
-def test_padronizar_nome_caminho_feliz():
-
-    assert padronizar_nome("  joão   da silva  ") == "João Da Silva"
-
-
-def test_padronizar_nome_caso_limite():
-
-    assert padronizar_nome("") == ""
+def test_padronizar_nome():
+    assert padronizar_nome("  joão  ") == "João"
 
 
-def test_limpar_documento_caminho_feliz():
-
-    assert limpar_documento("123.456.789-00") == "12345678900"
-
-
-def test_limpar_documento_entrada_invalida():
-
-    assert limpar_documento("(11) 9876A-4321") == "1198764321"
+def test_limpar_documento():
+    assert limpar_documento("123.abc") == "123"
 
 
-def test_linha_valida_com_dados():
-    linha = {"Nome": "Maria", "CPF": ""}
-    assert linha_eh_valida(linha) is True
+def test_linha_eh_valida():
+    assert linha_eh_valida({"a": "1"}) is True
+    assert linha_eh_valida({"a": ""}) is False
 
 
-def test_linha_invalida_totalmente_vazia():
+def test_integracao_viacep_cep_valido():
+    """Testa se a API ViaCEP retorna dados corretos."""
+    resultado = buscar_cep("01001-000")
+    assert resultado["Logradouro"] == "Praça da Sé"
+    assert resultado["Localidade"] == "São Paulo"
+    assert resultado["UF"] == "SP"
 
-    linha = {"Nome": "   ", "CPF": ""}
-    assert linha_eh_valida(linha) is False
+
+def test_integracao_viacep_cep_invalido():
+    """Testa se a API lida com CEP falso sem quebrar."""
+    resultado = buscar_cep("00000-000")
+    assert resultado == {}

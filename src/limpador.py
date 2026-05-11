@@ -1,5 +1,6 @@
 import re
 import csv
+import requests
 
 
 def padronizar_nome(nome: str) -> str:
@@ -25,40 +26,77 @@ def linha_eh_valida(linha: dict) -> bool:
     return False
 
 
+def buscar_cep(cep: str) -> dict:
+    """Busca dados de endereço na API pública do ViaCEP."""
+    cep_limpo = limpar_documento(cep)
+    if len(cep_limpo) != 8:
+        return {}
+
+    try:
+        url = f"https://viacep.com.br/ws/{cep_limpo}/json/"
+        resposta = requests.get(url, timeout=5)
+
+        if resposta.status_code == 200:
+            dados = resposta.json()
+            if "erro" not in dados:
+                return {
+                    "Logradouro": dados.get("logradouro", ""),
+                    "Bairro": dados.get("bairro", ""),
+                    "Localidade": dados.get("localidade", ""),
+                    "UF": dados.get("uf", "")
+                }
+    except requests.RequestException:
+        pass
+
+    return {}
+
+
 def processar_csv(caminho_entrada: str, caminho_saida: str) -> dict:
-    """Aplica regras nas colunas e salva o CSV limpo."""
+    """Aplica regras nas colunas, consome API e salva o CSV."""
     linhas_proc = 0
     linhas_rem = 0
 
-    with open(caminho_entrada, 'r', encoding='latin-1') as arq_in, \
-            open(caminho_saida, 'w', encoding='utf-8', newline='') as arq_out:
+    with open(caminho_entrada, 'r', encoding='latin-1') as arq_in:
+        leitor = list(csv.DictReader(arq_in))
 
-        leitor = csv.DictReader(arq_in)
-        campos = leitor.fieldnames
-
-        if not campos:
+        if not leitor:
             return {"processadas": 0, "removidas": 0}
 
-        escritor = csv.DictWriter(arq_out, fieldnames=campos)
-        escritor.writeheader()
+        campos = list(leitor[0].keys())
 
-        for linha in leitor:
-            if not linha_eh_valida(linha):
-                linhas_rem += 1
-                continue
+        if "CEP" in campos:
+            colunas_extras = ["Logradouro", "Bairro", "Localidade", "UF"]
+            for col in colunas_extras:
+                if col not in campos:
+                    campos.append(col)
 
-            if "Nome" in linha:
-                linha["Nome"] = padronizar_nome(linha["Nome"])
+        with open(caminho_saida, 'w', encoding='utf-8', newline='') as arq_out:
+            escritor = csv.DictWriter(arq_out, fieldnames=campos)
+            escritor.writeheader()
 
-            if "CPF" in linha:
-                linha["CPF"] = limpar_documento(linha["CPF"])
+            for linha in leitor:
+                if not linha_eh_valida(linha):
+                    linhas_rem += 1
+                    continue
 
-            if "Telefone" in linha:
-                linha["Telefone"] = limpar_documento(linha["Telefone"])
+                if "Nome" in linha:
+                    linha["Nome"] = padronizar_nome(linha["Nome"])
+                if "CPF" in linha:
+                    linha["CPF"] = limpar_documento(linha["CPF"])
+                if "Telefone" in linha:
+                    linha["Telefone"] = limpar_documento(linha["Telefone"])
 
-            linha.pop(None, None)
+                if "CEP" in linha:
+                    linha["CEP"] = limpar_documento(linha["CEP"])
+                    dados_end = buscar_cep(linha["CEP"])
 
-            escritor.writerow(linha)
-            linhas_proc += 1
+                    linha["Logradouro"] = dados_end.get("Logradouro", "")
+                    linha["Bairro"] = dados_end.get("Bairro", "")
+                    linha["Localidade"] = dados_end.get("Localidade", "")
+                    linha["UF"] = dados_end.get("UF", "")
+
+                linha.pop(None, None)
+                escritor.writerow(linha)
+                linhas_proc += 1
 
     return {"processadas": linhas_proc, "removidas": linhas_rem}
