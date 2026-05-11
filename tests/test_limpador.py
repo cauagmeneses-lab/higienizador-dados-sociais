@@ -27,4 +27,3 @@ def test_integracao_viacep_cep_invalido():
     """Testa se a API lida com CEP falso sem quebrar."""
     resultado = buscar_cep("00000-000")
     assert resultado == {}
-    
